@@ -1,25 +1,4 @@
---////////////////////////////////////////////
---
---QUERY PARA INGRESAR LAS HORAS DE ASISTENCIA POR TIMBRAJE
---
---////////////////////////////////////////////
-SELECT * FROM TBL_COLABORADOR
-SELECT * FROM TBL_TIPO_HORARIO
-
-
-SELECT COL_IDENTIFICACION, THO_ID FROM TBL_COLABORADOR 
-WHERE COL_IDENTIFICACION IN (
-    SELECT DISTINCT TIM_IDENTIFICACION FROM TBL_TIMBRE
-);
-
-SELECT * FROM TBL_COLABORADOR
-SELECT * FROM TBL_TIMBRE
-
-
-TRUNCATE TABLE TBL_REPORTE
-SELECT * FROM TBL_REPORTE WHERE REP_COL_IDENTIFICACION = '0401024211'
-WHERE CONVERT(TIME, REP_T_IMBRESO) > '08:30:00' ORDER BY CONVERT(TIME, REP_T_IMBRESO) ASC;
---////////////////////////////
+﻿--////////////////////////////
 -- THO_ID == 2 OPERATIVO
 --////////////////////////////
 
@@ -53,10 +32,10 @@ SELECT
         ELSE CONVERT(TIME, DATEADD(MINUTE, 
                 DATEDIFF(MINUTE, T.TIM_FECHA_IN, T.TIM_FECHA_OUT) - 45, 0))
     END AS REP_T_TRABAJADO,
-    -- Horas extra (solo horas dentro del d�a festivo)
+    -- Horas extra (solo horas dentro del día festivo)
     CASE 
         WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
-        WHEN DATEPART(WEEKDAY, T.TIM_FECHA_IN) IN (1, 7) THEN -- Domingo=1, S�bado=7
+        WHEN DATEPART(WEEKDAY, T.TIM_FECHA_IN) IN (1, 7) THEN -- Domingo=1, Sábado=7
             CONVERT(TIME, DATEADD(MINUTE, 
                 dbo.CalcularMinutosDiaFestivo(T.TIM_FECHA_IN, T.TIM_FECHA_OUT, CAST(T.TIM_FECHA_IN AS DATE)), 0))
         WHEN EXISTS (SELECT 1 FROM TBL_FERIADO F WHERE F.FER_FECHA = CAST(T.TIM_FECHA_IN AS DATE)) THEN
@@ -64,14 +43,14 @@ SELECT
                 dbo.CalcularMinutosDiaFestivo(T.TIM_FECHA_IN, T.TIM_FECHA_OUT, CAST(T.TIM_FECHA_IN AS DATE)), 0))
         ELSE '00:00'
     END AS REP_T_H_EXTRA,
-    -- Horas suplementarias CORREGIDAS (horas que exceden las 8h normales, m�ximo 4 horas)
+    -- Horas suplementarias CORREGIDAS (horas que exceden las 8h normales, máximo 4 horas)
     CASE 
         WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
         ELSE 
             CONVERT(TIME, DATEADD(MINUTE, 
                 dbo.CalcularMinutosSuplementarios(T.TIM_FECHA_IN, T.TIM_FECHA_OUT), 0))
     END AS REP_T_H_SUPLEMENTARIAS,
-    -- Horas nocturnas (19:00 a 6:00 del d�a siguiente)
+    -- Horas nocturnas (19:00 a 6:00 del día siguiente)
     CASE 
         WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
         ELSE 
@@ -80,7 +59,7 @@ SELECT
     END AS REP_T_H_JOR_NOC,
     -- Observaciones
     CASE 
-        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACI�N DE TIMBRE INCOMPLETA'
+        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACIÓN DE TIMBRE INCOMPLETA'
         ELSE ''
     END AS REP_OBSERVACIONES
 
@@ -115,7 +94,7 @@ SELECT
     CAST(T.TIM_FECHA_IN AS DATE) AS REP_FECHA,
     T.TIM_FECHA_IN AS REP_T_IMBRESO,
     T.TIM_FECHA_OUT AS REP_T_SALIDA,
-    -- C�lculo CORREGIDO de atrasos en formato HH:MM
+    -- Cálculo CORREGIDO de atrasos en formato HH:MM
     CASE 
         WHEN T.TIM_FECHA_OUT IS NULL THEN '08:00' -- 8 horas cuando falta timbre de salida
         WHEN CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN
@@ -124,7 +103,7 @@ SELECT
                 108)
         ELSE '00:00'
     END AS REP_T_ATRASO,
-    -- C�lculo de horas trabajadas
+    -- Cálculo de horas trabajadas
     CASE 
         WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
         ELSE CONVERT(TIME, DATEADD(MINUTE, 
@@ -136,8 +115,8 @@ SELECT
     '00:00' AS REP_T_H_JOR_NOC,
     -- Observaciones
     CASE
-        WHEN T.TIM_FECHA_OUT IS NULL AND CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN 'ATRASADO E INFORMACI�N DE TIMBRE INCOMPLETA'
-        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACI�N DE TIMBRE INCOMPLETA'
+        WHEN T.TIM_FECHA_OUT IS NULL AND CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN 'ATRASADO E INFORMACIÓN DE TIMBRE INCOMPLETA'
+        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACIÓN DE TIMBRE INCOMPLETA'
         WHEN CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN 'ATRASO'
         ELSE ''
     END AS REP_OBSERVACIONES
@@ -149,8 +128,178 @@ WHERE T.TIM_FECHA_IN IS NOT NULL
 ORDER BY C.COL_IDENTIFICACION, T.TIM_FECHA_IN;
 
 
+--////////////////////////////////////////////
+--
+--QUERY PARA INGRESAR LAS HORAS DE ASISTENCIA POR TIMBRAJE
+--
+--////////////////////////////////////////////
+SELECT * FROM TBL_COLABORADOR
+SELECT * FROM TBL_TIPO_HORARIO
 
 
-25	25	348	0201707452	WALTER PATRICIO PAMBABAY PUCHA	2025-04-25 00:00:00.000	2025-04-25 00:56:00.000	2025-04-25 01:08:00.000	00:00	23:27	00:00	00:00	00:00	
+SELECT COL_IDENTIFICACION, THO_ID FROM TBL_COLABORADOR 
+WHERE COL_IDENTIFICACION IN (
+    SELECT DISTINCT TIM_IDENTIFICACION FROM TBL_TIMBRE
+);
 
-54	19	0401024211	BOLIVAR ABDON ALVAREZ CASTILLO	2025-06-06 00:00:00.000	2025-06-06 00:58:00.000	2025-06-06 15:58:00.000
+SELECT * FROM TBL_COLABORADOR
+SELECT * FROM TBL_TIMBRE
+
+
+TRUNCATE TABLE TBL_REPORTE
+SELECT * FROM TBL_REPORTE WHERE REP_COL_IDENTIFICACION = '0401024211'
+WHERE CONVERT(TIME, REP_T_IMBRESO) > '08:30:00' ORDER BY CONVERT(TIME, REP_T_IMBRESO) ASC;
+
+
+--////////////////////////////////////////////
+--
+--QUERY PARA INGRESAR LAS HORAS VERSION 2.0
+--
+--////////////////////////////////////////////
+
+--////////////////////////////
+-- THO_ID == 2 OPERATIVO
+--////////////////////////////
+
+INSERT INTO TBL_REPORTE (
+    REP_COL_ID,
+    REP_COL_IDENTIFICACION, 
+    REP_COL_NOMBRES,
+    REP_FECHA,
+    REP_T_IMBRESO,
+    REP_T_SALIDA,
+    REP_T_ATRASO,
+    REP_T_TRABAJADO,
+    REP_T_H_EXTRA,
+    REP_T_H_SUPLEMENTARIAS,
+    REP_T_H_JOR_NOC,
+    REP_OBSERVACIONES
+)
+SELECT 
+    C.COL_ID AS REP_COL_ID,
+    C.COL_IDENTIFICACION AS REP_COL_IDENTIFICACION,
+    (C.COL_NOMBRES + ' ' + C.COL_APELLIDOS) AS REP_COL_NOMBRES,
+    CAST(T.TIM_FECHA_IN AS DATE) AS REP_FECHA,
+    T.TIM_FECHA_IN AS REP_T_IMBRESO,
+    T.TIM_FECHA_OUT AS REP_T_SALIDA,
+    -- Atraso siempre 00:00 para operativos
+    '00:00' AS REP_T_ATRASO,
+    -- Horas trabajadas (resta 45min de almuerzo)
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
+        ELSE CONVERT(TIME, DATEADD(MINUTE, 
+                DATEDIFF(MINUTE, T.TIM_FECHA_IN, T.TIM_FECHA_OUT) - 45, 0))
+    END AS REP_T_TRABAJADO,
+    -- Horas extra (solo horas dentro del día festivo)
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
+        WHEN DATEPART(WEEKDAY, T.TIM_FECHA_IN) IN (1, 7) THEN -- Domingo=1, Sábado=7
+            CONVERT(TIME, DATEADD(MINUTE, 
+                dbo.CalcularMinutosDiaFestivo(T.TIM_FECHA_IN, T.TIM_FECHA_OUT, CAST(T.TIM_FECHA_IN AS DATE)), 0))
+        WHEN EXISTS (SELECT 1 FROM TBL_FERIADO F WHERE F.FER_FECHA = CAST(T.TIM_FECHA_IN AS DATE)) THEN
+            CONVERT(TIME, DATEADD(MINUTE, 
+                dbo.CalcularMinutosDiaFestivo(T.TIM_FECHA_IN, T.TIM_FECHA_OUT, CAST(T.TIM_FECHA_IN AS DATE)), 0))
+        ELSE '00:00'
+    END AS REP_T_H_EXTRA,
+    -- Horas suplementarias
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
+        ELSE 
+            CONVERT(TIME, DATEADD(MINUTE, 
+                dbo.CalcularMinutosSuplementarios(T.TIM_FECHA_IN, T.TIM_FECHA_OUT), 0))
+    END AS REP_T_H_SUPLEMENTARIAS,
+    -- Horas nocturnas (19:00 a 6:00 del día siguiente)
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
+        ELSE 
+            CONVERT(TIME, DATEADD(MINUTE, 
+                dbo.CalcularMinutosNocturnos(T.TIM_FECHA_IN, T.TIM_FECHA_OUT), 0))
+    END AS REP_T_H_JOR_NOC,
+    -- Observaciones
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACIÓN DE TIMBRE INCOMPLETA'
+        ELSE ''
+    END AS REP_OBSERVACIONES
+FROM TBL_TIMBRE T
+INNER JOIN TBL_COLABORADOR C 
+    ON T.TIM_IDENTIFICACION = C.COL_IDENTIFICACION
+WHERE 
+    T.TIM_FECHA_IN IS NOT NULL 
+    AND C.THO_ID = 2  -- Solo operativos
+    -- 🔹 Solo insertar si no existe ya un reporte para ese colaborador y día
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM TBL_REPORTE R
+        WHERE R.REP_COL_IDENTIFICACION = C.COL_IDENTIFICACION
+          AND R.REP_FECHA = CAST(T.TIM_FECHA_IN AS DATE)
+    )
+ORDER BY 
+    C.COL_IDENTIFICACION, 
+    T.TIM_FECHA_IN;
+
+--////////////////////////////
+-- THO_ID == 3 ADMINISTRATIVO
+--////////////////////////////
+INSERT INTO TBL_REPORTE (
+    REP_COL_ID,
+    REP_COL_IDENTIFICACION, 
+    REP_COL_NOMBRES,
+    REP_FECHA,
+    REP_T_IMBRESO,
+    REP_T_SALIDA,
+    REP_T_ATRASO,
+    REP_T_TRABAJADO,
+    REP_T_H_EXTRA,
+    REP_T_H_SUPLEMENTARIAS,
+    REP_T_H_JOR_NOC,
+    REP_OBSERVACIONES
+)
+SELECT 
+    C.COL_ID AS REP_COL_ID,
+    C.COL_IDENTIFICACION AS REP_COL_IDENTIFICACION,
+    (C.COL_NOMBRES + ' ' + C.COL_APELLIDOS) AS REP_COL_NOMBRES,
+    CAST(T.TIM_FECHA_IN AS DATE) AS REP_FECHA,
+    T.TIM_FECHA_IN AS REP_T_IMBRESO,
+    T.TIM_FECHA_OUT AS REP_T_SALIDA,
+    -- Cálculo CORREGIDO de atrasos en formato HH:MM
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '08:00' -- 8 horas cuando falta timbre de salida
+        WHEN CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN
+            CONVERT(VARCHAR(5), 
+                DATEADD(MINUTE, DATEDIFF(MINUTE, '08:30:00', CAST(T.TIM_FECHA_IN AS TIME)), 0), 
+                108)
+        ELSE '00:00'
+    END AS REP_T_ATRASO,
+    -- Cálculo de horas trabajadas (resta 60 min de almuerzo)
+    CASE 
+        WHEN T.TIM_FECHA_OUT IS NULL THEN '00:00'
+        ELSE CONVERT(TIME, DATEADD(MINUTE, 
+                DATEDIFF(MINUTE, T.TIM_FECHA_IN, T.TIM_FECHA_OUT) - 60, 0))
+    END AS REP_T_TRABAJADO,
+    -- Valores fijos
+    '00:00' AS REP_T_H_EXTRA,
+    '00:00' AS REP_T_H_SUPLEMENTARIAS,
+    '00:00' AS REP_T_H_JOR_NOC,
+    -- Observaciones
+    CASE
+        WHEN T.TIM_FECHA_OUT IS NULL AND CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN 'ATRASADO E INFORMACIÓN DE TIMBRE INCOMPLETA'
+        WHEN T.TIM_FECHA_OUT IS NULL THEN 'INFORMACIÓN DE TIMBRE INCOMPLETA'
+        WHEN CAST(T.TIM_FECHA_IN AS TIME) > '08:36:59' THEN 'ATRASO'
+        ELSE ''
+    END AS REP_OBSERVACIONES
+FROM TBL_TIMBRE T
+INNER JOIN TBL_COLABORADOR C 
+    ON T.TIM_IDENTIFICACION = C.COL_IDENTIFICACION
+WHERE 
+    T.TIM_FECHA_IN IS NOT NULL 
+    AND C.THO_ID = 3 -- Solo administrativos
+    -- 🔹 Solo insertar si no existe ya el reporte para ese colaborador y día
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM TBL_REPORTE R
+        WHERE R.REP_COL_IDENTIFICACION = C.COL_IDENTIFICACION
+          AND R.REP_FECHA = CAST(T.TIM_FECHA_IN AS DATE)
+    )
+ORDER BY 
+    C.COL_IDENTIFICACION, 
+    T.TIM_FECHA_IN;
